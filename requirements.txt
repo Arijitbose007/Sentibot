@@ -9,3 +9,4 @@ av>=8.0.3
 localStoragePy
 requests
 numpy
+protobuf>=3.20,<5  # Adjusted to meet Streamlit and TensorFlow requirements

@@ -162,8 +162,8 @@ elif choice == "Webcam Face Detection":
         key="example",
         mode=WebRtcMode.SENDRECV,
         rtc_configuration=rtc_config,
-        video_transformer_factory=VideoTransformer,
-        client_settings={"video": {"width": 80, "height": 60}}
+        video_processor_factory=VideoTransformer,
+        media_stream_constraints={"video": True, "audio": False}
     )
 
     user_input = st.text_input("Ask something:")
