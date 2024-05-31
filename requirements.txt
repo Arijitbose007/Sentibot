@@ -5,3 +5,4 @@ tensorflow>=2.6.0
 keras>=2.6.0
 aioice>=0.7.6
 aiortc>=1.1.0
+av>=8.0.3
