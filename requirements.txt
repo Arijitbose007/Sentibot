@@ -1,0 +1,7 @@
+streamlit
+opencv-python-headless
+streamlit-webrtc
+tensorflow
+localStoragePy
+requests
+numpy
