@@ -3,26 +3,18 @@ import cv2
 import streamlit as st
 import re
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, WebRtcMode, RTCConfiguration
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 import requests
 from localStoragePy import localStoragePy
-import tensorflow as tf
 import logging
 
 # Enable logging for debugging
 logging.basicConfig(level=logging.DEBUG)
 
-if tf.test.gpu_device_name():
-    print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
-else:
-    print("Please install GPU version of TF")
-
 localStorage = localStoragePy('my_app', 'json')
 
 model = "@cf/meta/llama-2-7b-chat-int8"
 account_id = "dde57a514ddb8385b5c01fdadc5f78b7"
-api_token = "JiJkejsqQ888ICVLwuUpOJF-pbnC5dXurOC1iXHD"  
+api_token = "JiJkejsqQ888ICVLwuUpOJF-pbnC5dXurOC1iXHD"
 
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
@@ -80,23 +72,9 @@ class VideoTransformer(VideoTransformerBase):
     facecasc = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     gender_list = ['Male', 'Female']
+    age_list = ['0-2', '3-8', '9-15', '16-25', '26-35', '36-45', '46-60', '61+']
 
-    model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48, 48, 1)))
-    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-    model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-    model.add(Flatten())
-    model.add(Dense(1024, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(7, activation='softmax'))
-
-    model.load_weights('pr_model.h5')
+    emotion_net = cv2.dnn.readNetFromONNX('emotion-ferplus-8.onnx')
 
     def transform(self, frame):
         MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
@@ -111,14 +89,15 @@ class VideoTransformer(VideoTransformerBase):
 
             for (x, y, w, h) in faces:
                 roi_gray = gray[y:y + h, x:x + w]
-                cropped_img = np.expand_dims(np.expand_dims(cv2.resize(roi_gray, (48, 48)), -1), 0)
-                prediction = VideoTransformer.model.predict(cropped_img)
-                maxindex = int(np.argmax(prediction))
-                VideoTransformer.last_predictions = (maxindex, prediction)
+                blob = cv2.dnn.blobFromImage(cv2.resize(roi_gray, (64, 64)), scalefactor=1/255.0, size=(64, 64), mean=(0, 0, 0), swapRB=True, crop=False)
+                self.emotion_net.setInput(blob)
+                emotion_preds = self.emotion_net.forward()
+                maxindex = int(np.argmax(emotion_preds))
+                VideoTransformer.last_predictions = (maxindex, emotion_preds)
 
         else:
             faces = VideoTransformer.last_faces
-            maxindex, prediction = VideoTransformer.last_predictions
+            maxindex, emotion_preds = VideoTransformer.last_predictions
 
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y-50), (x+w, y+h+10), (255, 0, 0), 2)
@@ -131,14 +110,12 @@ class VideoTransformer(VideoTransformerBase):
             gender_preds = VideoTransformer.gender_net.forward()
             gender = gender_list[gender_preds[0].argmax()]
 
-            age_list = ['0-2', '3-8', '9-15', '16-25', '26-35', '36-45', '46-60', '61+']
-
             roi = cv2.resize(frame[y:y+h, x:x+w], (227, 227))
             blob = cv2.dnn.blobFromImage(roi, 1, (227, 227), MODEL_MEAN_VALUES, swapRB=False)
 
             VideoTransformer.age_net.setInput(blob)
             age_preds = VideoTransformer.age_net.forward()
-            age = age_list[age_preds[0].argmax()]
+            age = self.age_list[age_preds[0].argmax()]
 
             cv2.putText(frame, f"{gender}, {age}, {emotion_dict[maxindex]}", (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
@@ -159,7 +136,7 @@ if choice == "Home":
         </br>"""
     st.markdown(html_temp_home1, unsafe_allow_html=True)
     st.write("""
-        The application has two functionalities:
+        The application has two functionalities.
 
         1. Real-time face detection using webcam feed.
 
@@ -199,7 +176,7 @@ elif choice == "Webcam Face Detection":
         if webrtc_ctx.state.playing:
             st.write("Webcam is active. If the feed is not showing, please ensure your browser has camera permissions and try refreshing the page.")
         else:
-            st.write("Click on start to use webcam and detect your face emotion")
+            st.write("Click on start to use webcam and detect your face emotion.")
 
     video_streaming()
 
