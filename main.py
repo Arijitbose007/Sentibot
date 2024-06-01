@@ -35,40 +35,55 @@ emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutra
 
 st.title('Emotion Powered Chatbot')
 
+
 def format_response(response):
     emoji_map = {
-        "Oh, wow!": "😮",
-        "giggles": "😄",
-        "Oh, my goodness!": "😲",
-        "blinks": "😉",
-        "nervous chuckle": "😅",
-        "excitedly": "😃",
-        "Yes, that's right!": "👍",
-        "nods": "👌",
-        "smiling": "😊",
-        "bounces up and down": "😁",
-        "laughs": "😂",
-        "winks": "😜",
-        "frowns": "😟",
-        "cries": "😭",
-        "angry": "😠",
-        "confused": "😕",
-        "sighs": "😔",
-        "blushes": "😊",
+        "Oh, wow!": "😮\n",
+        "giggles": "😄\n",
+        "Oh, my goodness!": "😲\n",
+        "blinks": "😉\n",
+        "nervous chuckle": "😅\n",
+        "excitedly": "😃\n",
+        "Yes, that's right!": "👍\n",
+        "nods": "👌\n",
+        "smiling": "😊\n",
+        "bounces up and down": "😁\n",
+        "laughs": "😂\n",
+        "winks": "😜\n",
+        "frowns": "😟\n",
+        "cries": "😭\n",
+        "angry": "😠\n",
+        "confused": "😕\n",
+        "sighs": "😔\n",
+        "blushes": "😊\n",
+        "*adjusts glasses*": "🤓\n",
+        "winks": "😉\n",
+        "applauds": "👏\n",
+        "thinks": "🤔\n",
+        "shakes head": "🙅\n",
+        "cheers": "🥳\n",
+        "facepalms": "🤦\n",
+        "rolls eyes": "🙄\n",
+        "screams": "😱\n",
+        "whispers": "🤫\n",
+        "smirks": "😏\n",
+        "claps": "👏\n",
+        "shrugs": "🤷\n"
     }
 
     for phrase, emoji in emoji_map.items():
         response = response.replace(phrase, emoji)
 
     response = re.sub(r'\s*\([^)]*\)', '', response)
-    
+
     # Adding some HTML/CSS styling for better appearance
     response_html = f"""
     <div style="background-color:#1E1E1E; padding:10px; border-radius:10px;">
-        <p style="color:#E0E0E0; font-size:16px;">{response}</p>
+        <p style="color:#E0E0E0; font-size:16px; white-space: pre-wrap;">{response}</p>
     </div>
     """
     return response_html
+
 
 class VideoTransformer(VideoTransformerBase):
     frame_count = 0
