@@ -14,9 +14,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 if tf.test.gpu_device_name():
-    logging.info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+    print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
 else:
-    logging.warning("Please install GPU version of TF")
+    print("Please install GPU version of TF")
 
 localStorage = localStoragePy('my_app', 'json')
 
@@ -148,61 +148,61 @@ def video_streaming():
             """)
     elif choice == "Webcam Face Detection":
         st.header("Webcam Live Feed")
-        st.write("Click on start to use webcam and detect your face emotion, gender and age")
+        st.write("Click on start to use webcam and detect your face emotion")
 
         rtc_config = RTCConfiguration({
-            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+                {"urls": ["stun:stun3.l.google.com:19302"]},
+                {"urls": ["stun:stun4.l.google.com:19302"]},
+            ]
         })
 
-        try:
-            webrtc_ctx = webrtc_streamer(
-                key="example",
-                mode=WebRtcMode.SENDRECV,
-                rtc_configuration=rtc_config,
-                video_processor_factory=VideoTransformer,
-                media_stream_constraints={"video": True, "audio": False},
-                async_processing=True,
-            )
+        webrtc_ctx = webrtc_streamer(
+            key="example",
+            mode=WebRtcMode.SENDRECV,
+            rtc_configuration=rtc_config,
+            video_processor_factory=VideoTransformer,
+            media_stream_constraints={"video": True, "audio": False}
+        )
 
-            if webrtc_ctx.video_processor:
-                if localStorage.getItem('key') != None:
-                    maxindex = int(localStorage.getItem('key'))
-                    st.text(emotion_dict[maxindex])
+        if webrtc_ctx.video_transformer:
+            user_input = st.text_input("Ask something:")
+            if st.button('Send'):
+                if user_input != '':
+                    value = localStorage.getItem('key')
 
-                    if "message" not in st.session_state:
-                        st.session_state.message = ""
+                    response = requests.post(
+                        f"https://api-inference.huggingface.co/models/{model}",
+                        headers={"Authorization": f"Bearer {api_token}"},
+                        json={
+                            "inputs": {
+                                "past_user_inputs": [],
+                                "generated_responses": [],
+                                "text": user_input,
+                            },
+                            "parameters": {
+                                "repetition_penalty": 1.33,
+                                "temperature": 0.76,
+                                "max_new_tokens": 250,
+                                "min_length": 1,
+                                "do_sample": True,
+                                "top_p": 0.94,
+                                "top_k": 50,
+                                "max_time": 20,
+                            },
+                            "options": {"use_cache": False},
+                        },
+                    )
+                    response_json = response.json()
+                    bot_response = response_json.get('generated_text', 'Sorry, I cannot generate a response right now.')
 
-                    user_input = st.text_input("You: ", st.session_state.message, key="input")
-
-                    if user_input:
-                        st.session_state.message = user_input
-                        st.write("Human:", user_input)
-                        headers = {
-                            "Authorization": f"Bearer {api_token}",
-                            "Content-Type": "application/json",
-                        }
-
-                        data = {
-                            "messages": [{"role": "user", "content": user_input}],
-                            "model": model,
-                            "temperature": 0.5,
-                            "max_tokens": 1000,
-                            "stop": None,
-                        }
-
-                        response = requests.post(
-                            f"https://api.example.com/v1/models/{model}/completions",
-                            headers=headers,
-                            json=data,
-                        )
-
-                        bot_response = response.json().get('generated_text', 'Sorry, I cannot generate a response right now.')
-
-                        formatted_response = format_response(bot_response)
-                        st.text_area("Bot:", value=formatted_response, height=100)
-        except AttributeError as e:
-            st.error(f"An error occurred: {e}")
-            logging.error(f"AttributeError: {e}")
+                    formatted_response = format_response(bot_response)
+                    st.text_area("Bot:", value=formatted_response, height=100)
+        else:
+            st.error("This feature is disabled on mobile devices.")
 
     elif choice == "About":
         st.subheader("About this app")
