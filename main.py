@@ -37,24 +37,38 @@ st.title('Emotion Powered Chatbot')
 
 def format_response(response):
     emoji_map = {
-        "Oh, wow!": "\n😮",
-        "giggles": "\n😄",
-        "Oh, my goodness!": "\n😲",
-        "blinks": "\n😉",
-        "nervous chuckle": "\n😅",
-        "excitedly": "\n😃",
-        "Yes, that's right!": "\n👍",
-        "nods": "\n👌",
-        "smiling": "\n😊",
-        "bounces up and down": "\n😁",
+        "Oh, wow!": "😮",
+        "giggles": "😄",
+        "Oh, my goodness!": "😲",
+        "blinks": "😉",
+        "nervous chuckle": "😅",
+        "excitedly": "😃",
+        "Yes, that's right!": "👍",
+        "nods": "👌",
+        "smiling": "😊",
+        "bounces up and down": "😁",
+        "laughs": "😂",
+        "winks": "😜",
+        "frowns": "😟",
+        "cries": "😭",
+        "angry": "😠",
+        "confused": "😕",
+        "sighs": "😔",
+        "blushes": "😊",
     }
 
     for phrase, emoji in emoji_map.items():
         response = response.replace(phrase, emoji)
 
     response = re.sub(r'\s*\([^)]*\)', '', response)
-
-    return response
+    
+    # Adding some HTML/CSS styling for better appearance
+    response_html = f"""
+    <div style="background-color:#1E1E1E; padding:10px; border-radius:10px;">
+        <p style="color:#E0E0E0; font-size:16px;">{response}</p>
+    </div>
+    """
+    return response_html
 
 class VideoTransformer(VideoTransformerBase):
     frame_count = 0
@@ -206,7 +220,7 @@ elif choice == "Webcam Face Detection":
             inference = response.json()
             if 'result' in inference:
                 formatted_response = format_response(inference["result"]["response"])
-                st.markdown(formatted_response)
+                st.markdown(formatted_response, unsafe_allow_html=True)
             else:
                 st.error(f"API request failed. Error: {inference['errors']}")
         else:
