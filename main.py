@@ -9,14 +9,21 @@ import requests
 from localStoragePy import localStoragePy
 import tensorflow as tf
 import logging
+import os
 
 # Enable logging for debugging
 logging.basicConfig(level=logging.DEBUG)
 
+# Check and handle GPU availability
 if tf.test.gpu_device_name():
     print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
 else:
     print("Please install GPU version of TF")
+
+# Ensure the directory for localStoragePy exists
+local_storage_dir = os.path.expanduser('~/.config/localStoragePy/my_app')
+if not os.path.exists(local_storage_dir):
+    os.makedirs(local_storage_dir)
 
 localStorage = localStoragePy('my_app', 'json')
 
