@@ -40,12 +40,33 @@ def format_response(response):
         "nods": "\n👌",
         "smiling": "\n😊",
         "bounces up and down": "\n😁",
+        "Wow, that's amazing!": "\n😯",
+        "Thank you!": "\n🙏",
+        "That's hilarious!": "\n😂",
+        "That's so kind!": "\n😊",
+        "Yikes!": "\n😬",
+        "Oh no!": "\n😱",
+        "That sounds great!": "\n😃",
+        "I see.": "\n🧐",
+        "That's interesting.": "\n🤔",
+        "What a surprise!": "\n😮",
+        "No way!": "\n😲",
+        "Haha!": "\n🤣",
+        "That makes sense.": "\n👍",
+        "I agree.": "\n👌",
+        "Absolutely!": "\n👍",
+        "Of course!": "\n😇",
+        "Definitely!": "\n💯",
     }
 
     for phrase, emoji in emoji_map.items():
         response = response.replace(phrase, emoji)
 
     response = re.sub(r'\s*\([^)]*\)', '', response)
+
+    # Apply basic markdown formatting for better readability
+    response = re.sub(r'(?<!\n)\n(?!\n)', '  \n', response)  # Add markdown line breaks
+    response = response.replace("\n\n", "\n\n---\n\n")  # Separate paragraphs with horizontal rules
 
     return response
 
@@ -138,11 +159,11 @@ if choice == "Home":
         </br>"""
     st.markdown(html_temp_home1, unsafe_allow_html=True)
     st.write("""
-        The application has two functionalities.
+        The application has two functionalities:
 
-        1. Real time face detection using web cam feed.
+        1. Real-time face detection using webcam feed.
 
-        2. Real time face emotion recognization.
+        2. Real-time face emotion recognition.
         """)
     st.write("""
         **Note:** If the webcam feed does not start, please reload the page.
