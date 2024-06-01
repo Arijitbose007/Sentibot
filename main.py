@@ -171,7 +171,10 @@ elif choice == "Webcam Face Detection":
             media_stream_constraints={"video": True, "audio": False},
             async_processing=True,
         )
-
+        
+        st.write("""
+        **Note:** If the webcam feed does not start, please reload the page.
+        """)
         if webrtc_ctx.state.playing:
             st.write("Webcam is active. If the feed is not showing, please ensure your browser has camera permissions and try refreshing the page.")
         else:
