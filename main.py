@@ -22,7 +22,7 @@ localStorage = localStoragePy('my_app', 'json')
 
 model = "@cf/meta/llama-2-7b-chat-int8"
 account_id = "dde57a514ddb8385b5c01fdadc5f78b7"
-api_token = "JiJkejsqQ888ICVLwuUpOJF-pbnC5dXurOC1iXHD"  
+api_token = "JiJkejsqQ888ICVLwuUpOJF-pbnC5dXurOC1iXHD"
 
 emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
@@ -61,7 +61,7 @@ class VideoTransformer(VideoTransformerBase):
     gender_list = ['Male', 'Female']
 
     model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48, 48, 1)))
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
     model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -78,7 +78,7 @@ class VideoTransformer(VideoTransformerBase):
     model.load_weights('pr_model.h5')
 
     def transform(self, frame):
-        MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
+        MODEL_MEAN_VALUES=(78.4263377603, 87.7689143744, 114.895847746)
 
         frame = frame.to_ndarray(format="bgr24")
 
@@ -127,82 +127,83 @@ class VideoTransformer(VideoTransformerBase):
 
         return frame
 
-activities = ["Home", "Webcam Face Detection", "About"]
-choice = st.sidebar.selectbox("Select Activity", activities)
+def video_streaming():
+    activities = ["Home", "Webcam Face Detection", "About"]
+    choice = st.sidebar.selectbox("Select Activity", activities)
 
-if choice == "Home":
-    html_temp_home1 = """<div style="background-color:#6D7B8D;padding:10px">
-        <h4 style="color:white;text-align:center;">
-        Gender, Age and Emotion detection application using OpenCV, Custom CNN model and Streamlit.</h4>
-        </div>
-        </br>"""
-    st.markdown(html_temp_home1, unsafe_allow_html=True)
-    st.write("""
-        The application has two functionalities.
+    if choice == "Home":
+        html_temp_home1 = """<div style="background-color:#6D7B8D;padding:10px">
+            <h4 style="color:white;text-align:center;">
+            Gender, Age and Emotion detection application using OpenCV, Custom CNN model and Streamlit.</h4>
+            </div>
+            </br>"""
+        st.markdown(html_temp_home1, unsafe_allow_html=True)
+        st.write("""
+            The application has two functionalities.
 
-        1. Real time face detection using web cam feed.
+            1. Real time face detection using web cam feed.
 
-        2. Real time face emotion recognization.
-        """)
-elif choice == "Webcam Face Detection":
-    st.header("Webcam Live Feed")
-    st.write("Click on start to use webcam and detect your face emotion")
+            2. Real time face emotion recognization.
+            """)
+    elif choice == "Webcam Face Detection":
+        st.header("Webcam Live Feed")
+        st.write("Click on start to use webcam and detect your face emotion")
 
-    rtc_config = RTCConfiguration({
-        "iceServers": [
-            {"urls": ["stun:stun.l.google.com:19302"]},
-            {"urls": ["stun:stun1.l.google.com:19302"]},
-            {"urls": ["stun:stun2.l.google.com:19302"]},
-            {"urls": ["stun:stun3.l.google.com:19302"]},
-            {"urls": ["stun:stun4.l.google.com:19302"]},
-        ]
-    })
+        rtc_config = RTCConfiguration({
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+                {"urls": ["stun:stun3.l.google.com:19302"]},
+                {"urls": ["stun:stun4.l.google.com:19302"]},
+            ]
+        })
 
-    def video_streaming():
         webrtc_ctx = webrtc_streamer(
             key="example",
             mode=WebRtcMode.SENDRECV,
             rtc_configuration=rtc_config,
             video_processor_factory=VideoTransformer,
-            media_stream_constraints={"video": True, "audio": False},
-            async_processing=True,
+            media_stream_constraints={"video": True, "audio": False}
         )
 
-        if webrtc_ctx.state.playing:
-            st.write("Webcam is active. If the feed is not showing, please ensure your browser has camera permissions and try refreshing the page.")
-        else:
-            st.write("Click on start to use webcam and detect your face emotion")
+        if webrtc_ctx.video_transformer:
+            user_input = st.text_input("Ask something:")
+            if st.button('Send'):
+                if user_input != '':
+                    value = localStorage.getItem('key')
 
+                    response = requests.post(
+                        f"https://api-inference.huggingface.co/models/{model}",
+                        headers={"Authorization": f"Bearer {api_token}"},
+                        json={
+                            "inputs": {
+                                "past_user_inputs": [],
+                                "generated_responses": [],
+                                "text": user_input,
+                            },
+                            "parameters": {
+                                "repetition_penalty": 1.33,
+                                "temperature": 0.76,
+                                "max_new_tokens": 250,
+                                "min_length": 1,
+                                "do_sample": True,
+                                "top_p": 0.94,
+                                "top_k": 50,
+                                "max_time": 20,
+                            },
+                            "options": {"use_cache": False},
+                        },
+                    )
+                    response_json = response.json()
+                    bot_response = response_json.get('generated_text', 'Sorry, I cannot generate a response right now.')
+
+                    formatted_response = format_response(bot_response)
+                    st.text_area("Bot:", value=formatted_response, height=100)
+
+    elif choice == "About":
+        st.subheader("About this app")
+        st.markdown("This application is built using Streamlit, OpenCV, and TensorFlow.")
+
+if __name__ == "__main__":
     video_streaming()
-
-    user_input = st.text_input("Ask something:")
-    if st.button('Send'):
-        if user_input != '':
-            value = localStorage.getItem('key')
-
-            response = requests.post(
-                f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}",
-                headers={"Authorization": f"Bearer {api_token}"},
-                json={"messages": [
-                    {"role": "system", "content": f"You are an emotion powered chatbot. Your responses are influenced by the user emotions. Currently the user is {emotion_dict[int(value)]}!"},
-                    {"role": "user", "content": user_input}
-                ]}
-            )
-
-            inference = response.json()
-            if 'result' in inference:
-                formatted_response = format_response(inference["result"]["response"])
-                st.markdown(formatted_response)
-            else:
-                st.error(f"API request failed. Error: {inference['errors']}")
-        else:
-            st.write('Please enter a question.')
-
-elif choice == "About":
-    st.subheader("About this app")
-    html_temp_about1 = """<div style="background-color:#6D7B8D;padding:10px">
-        <h4 style="color:white;text-align:center;">
-        Real time face emotion detection application using OpenCV, Custom Trained CNN model and Streamlit.</h4>
-        </div>
-        </br>"""
-    st.markdown(html_temp_about1, unsafe_allow_html=True)
