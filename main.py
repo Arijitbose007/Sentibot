@@ -61,7 +61,7 @@ class VideoTransformer(VideoTransformerBase):
     gender_list = ['Male', 'Female']
 
     model = Sequential()
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
+    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48, 48, 1)))
     model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -78,7 +78,7 @@ class VideoTransformer(VideoTransformerBase):
     model.load_weights('pr_model.h5')
 
     def transform(self, frame):
-        MODEL_MEAN_VALUES=(78.4263377603, 87.7689143744, 114.895847746)
+        MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
 
         frame = frame.to_ndarray(format="bgr24")
 
@@ -158,13 +158,22 @@ elif choice == "Webcam Face Detection":
         ]
     })
 
-    webrtc_ctx = webrtc_streamer(
-        key="example",
-        mode=WebRtcMode.SENDRECV,
-        rtc_configuration=rtc_config,
-        video_processor_factory=VideoTransformer,
-        media_stream_constraints={"video": True, "audio": False}
-    )
+    def video_streaming():
+        webrtc_ctx = webrtc_streamer(
+            key="example",
+            mode=WebRtcMode.SENDRECV,
+            rtc_configuration=rtc_config,
+            video_processor_factory=VideoTransformer,
+            media_stream_constraints={"video": True, "audio": False},
+            async_processing=True,
+        )
+
+        if webrtc_ctx.state.playing:
+            st.write("Webcam is active. If the feed is not showing, please ensure your browser has camera permissions and try refreshing the page.")
+        else:
+            st.write("Click on start to use webcam and detect your face emotion")
+
+    video_streaming()
 
     user_input = st.text_input("Ask something:")
     if st.button('Send'):
