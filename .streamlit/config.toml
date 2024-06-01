@@ -4,8 +4,8 @@ enableCORS = false
 port = 8501
 
 [theme]
-primaryColor = "#6D7B8D"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+primaryColor = "#1DB954"  # A pleasing green for primary elements
+backgroundColor = "#121212"  # Very dark gray for the background
+secondaryBackgroundColor = "#1E1E1E"  # Dark gray for secondary background
+textColor = "#E0E0E0"  # Light gray for text
 font = "sans serif"
