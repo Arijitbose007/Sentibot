@@ -144,6 +144,10 @@ if choice == "Home":
 
         2. Real time face emotion recognization.
         """)
+    st.write("""
+        **Note:** If the webcam feed does not start, please reload the page.
+        """)
+
 elif choice == "Webcam Face Detection":
     st.header("Webcam Live Feed")
     st.write("Click on start to use webcam and detect your face emotion")
